@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACRaffle - Donate</title>
+    <link href='/styles/style.css' rel='stylesheet' type='text/css' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans+Semi+Expanded:wght@600;800&display=swap" rel="stylesheet">
+		<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+		<script src="sweetalert2.all.min.js"></script>
+		<script defer src="/javascripts/dropdown.js"></script>
+		<script defer src="/javascripts/coolbutton.js"></script>
+		<script defer src="/javascripts/subtotal.js"></script>
+		<link rel="icon" href="/images/favicon.ico">
+</head>
+<body>
+    <div class='navigationBar'> <!-- NAVIGATION HEADER -->
+      <a class='acraffleTitle'>
+				ACRaffle
+				<img id="menusvg" src="/images/menu.svg" alt="">
+				<div id="dropdown" style="height: 0px;">
+					<p data-url="/index">Home</p>
+					<p data-url="/shop">Donate</p>
+					<!--<p data-url="/faq">FAQ</p>-->
+					<p data-url="/suggestions">Suggestions</p>
+				</div>
+			</a>
+        <div class='navLinks'>
+          <ul>
+            <li><a href='/index'>Home</a></li> 
+            <li><a class="selected" href='/shop'>Donate</a></li> <!-- empty for now -->
+            <!--<li><a href='/faq'>FAQ</a></li>-->
+            <li><a href='/suggestions'>Suggestions</a></li>
+          </ul>
+        </div>
+    </div> <!-- NAVIGATION HEADER END -->
+	<div class="defaultBlock normalHeader">
+		<div id="info" data-refresh="<%= data.refreshToken %>" data-discid="<%= data.id %>" data-discusername="<%= data.username %>">
+			<p>
+				Thanks for donating, <%= data.username %>!
+			</p>
+		</div>
+    <img src='https://i.imgur.com/ziETVUj.gif?noredirect'></img>
+		<p class="defaultText">For every donation of $1.00 USD, we will show our appreciation by giving you 1 !acrdonation (!acrd). An !acrd is just like a normal !acrp except you get to pick the show that the character comes from. Thanks so much for your support!</p>
+    <!--<div class='clear'></div>-->
+		<input type="number" id="amount" class='box' name="amount" placeholder="Number of donations" min="1" max="100" step="1">
+		<p class="defaultText" id="subtotal" style="color: white; text-align: center;">Subtotal: $0.00</p>
+    <button class="coolButton" id="checkout">Checkout<span></span></button>
+	</div>
+	<div class="defaultBlock defaultText">
+		<p>This is a donation and is non-refundable. If there is an error receiving your ACRD please petition the creator in the ACRaffle Discord and show proof of donation. Thank you.</p>
+	</div>
+	<script>
+		//GETTING DISCORD IDENTIFICATION CONSTANTS
+		let info = document.getElementById('info').dataset
+		//console.log(info)
+		let {id, username, refreshToken} = info
+	</script>
+    <script>
+			window.onload = () => {
+				let encRefresh = document.getElementById("info").dataset.refresh //refresh token
+				let d = new Date()
+				d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000) //7 days from now
+				let expires = "expires=" + d.toUTCString()
+				document.cookie = "refreshTokenCookie=" + encRefresh + ";" + expires + ";path=/" //store token in cookie
+			};
+    </script>
+    <script>
+      const button = document.getElementById("checkout")
+			const amt = document.getElementById("amount")
+			/*
+			amt.addEventListener("change", () => {
+				console.log(parseInt(5) === parseFloat(5))
+			})
+			*/
+			let mainurl = "<%= data.mainurl %>"
+      button.addEventListener("click", () => {
+				let quantity = amt.value
+				if (quantity === '') {
+					Swal.fire({
+						title: 'Wait!',
+						text: 'Must enter a valid quantity',
+						icon: 'warning',
+						confirmButtonText: 'OK',
+					})
+					return
+				}
+				if (quantity.indexOf('e') !== -1) {
+					Swal.fire({
+						title: 'Wait!',
+						text: 'Quantity must not contain "e"',
+						icon: 'warning',
+						confirmButtonText: 'OK',
+					})
+					return
+				}
+				fetch(`${mainurl}/create-checkout-session`, { //send user to stripe checkout session
+						method: "POST",
+						headers: {
+								"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+								"id": document.getElementById("info").dataset.discid, //send discord id back to server
+								"quantity": amt.value
+						})
+				}).then(res => { //random error checking
+						if (res.ok) return res.json()
+						return res.json().then(json => Promise.reject(json))
+				}).then(({ url }) => {
+						window.location = url //redirect to session
+				}).catch(err => {
+						console.error(err)
+				})
+      })
+    </script>
+</body>
+</html> 

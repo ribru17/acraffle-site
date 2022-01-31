@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width'>
+    <title>ACRaffle - Home</title>
+    <link href='/styles/style.css' rel='stylesheet' type='text/css' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans+Semi+Expanded:wght@600;800&display=swap" rel="stylesheet">
+		<script defer src="/javascripts/home.js"></script>
+		<script defer src="/javascripts/dropdown.js"></script>
+		<link rel="icon" href="/images/favicon.ico">
+  </head>
+
+  <body>
+    
+    <div class='navigationBar'> <!-- NAVIGATION HEADER -->
+      <a class='acraffleTitle'>
+				ACRaffle
+				<img id="menusvg" src="/images/menu.svg" alt="">
+				<div id="dropdown" style="height: 0px;">
+					<p data-url="/index">Home</p>
+					<p data-url="/shop">Donate</p>
+					<!--<p data-url="/faq">FAQ</p>-->
+					<p data-url="/suggestions">Suggestions</p>
+				</div>
+			</a>
+			<div class='navLinks'>
+				<ul>
+					<li><a href='/index'>Home</a></li> 
+					<li><a href='/shop'>Donate</a></li> <!-- empty for now -->
+					<!--<li><a class="selected" href='/faq'>FAQ</a></li>-->
+					<li><a href='/suggestions'>Suggestions</a></li>
+				</ul>
+			</div>
+    </div> <!-- NAVIGATION HEADER END -->
+		<div class="defaultBlock">
+			<p class="normalHeader">Thanks for your support!</p>
+			<a class="coolLink" style="font-size: 30px;" href='/index'>Go Home</a>
+		</div>
+
+  </body>
+
+</html>

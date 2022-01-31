@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width'>
+    <title>ACRaffle - Home</title>
+    <link href='/styles/style.css' rel='stylesheet' type='text/css' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans+Semi+Expanded:wght@600;800&display=swap" rel="stylesheet">
+		<script defer src="/javascripts/home.js"></script>
+		<script defer src="/javascripts/dropdown.js"></script>
+		<script defer src="/javascripts/progressbar.js"></script>
+		<link rel="icon" href="/images/favicon.ico">
+  </head>
+
+  <body>
+    
+    <div class='navigationBar'> <!-- NAVIGATION HEADER -->
+      <a class='acraffleTitle'>
+				ACRaffle
+				<img id="menusvg" src="/images/menu.svg" alt="">
+				<div id="dropdown" style="height: 0px;">
+					<p data-url="/index">Home</p>
+					<p data-url="/shop">Donate</p>
+					<!--<p data-url="/faq">FAQ</p>-->
+					<p data-url="/suggestions">Suggestions</p>
+				</div>
+			</a>
+			<div class='navLinks'>
+				<ul>
+					<li><a class="selected" href='/index'>Home</a></li> 
+					<li><a href='/shop'>Donate</a></li> <!-- empty for now -->
+					<!--<li><a href='/faq'>FAQ</a></li>-->
+					<li><a href='/suggestions'>Suggestions</a></li>
+				</ul>
+			</div>
+			<div id="progressbarcont">
+				<div id="progressbar"></div>
+			</div>
+    </div> <!-- NAVIGATION HEADER END -->
+    
+    <div class='defaultBlock'>
+      <div text-align: 'center' class='normalHeader'>
+        What is ACRaffle?
+      </div>
+      <p class='defaultText'>ACRaffle is an anime themed character collecting system for Discord. Similar to trading cards, ACRaffle lets users unlock anime characters through raffles, trades, or purchases in the shop, and display their favorite characters on their ACProfile.</p>
+      <a class='discordLinks' target='_blank' href='https://discord.gg/7tTZzugeVp'>Join the official Discord</a>
+      </br>
+      <a class='discordLinks' target='_blank' margin-top='20px' href='https://discord.com/oauth2/authorize?client_id=864733251166797835&permissions=289856&scope=bot'>Invite ACRaffle to your server</a>
+			</br>
+			<a class='discordLinks' target='_blank' margin-top='20px' href='https://top.gg/bot/864733251166797835'>Top.gg</a>
+    </div>
+		<div class='defaultBlock hideOnMobile'>
+			<p class="normalHeader">Tutorial</p>
+			<div class="iframe-container">
+				<iframe src="https://www.youtube.com/embed/hTzOGHAkqMg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			</div>
+		</div>
+    <div class='defaultBlock'>
+      <a class='shopLinkBody' id='shopButton' href='/shop'>Go to donation page</a>
+    </div>
+
+  </body>
+
+</html>
