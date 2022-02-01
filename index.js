@@ -166,7 +166,7 @@ app.get('/shop', async (req, res) => {
 	} catch (err) {
 		console.error(err)
 		res.status(200).set('Content-Type', 'text/html')
-		res.render('cancel') //purchase failed, redirect to cancel page
+		res.render('timeout') //purchase failed, redirect to cancel page
 		return
 	}
 })
@@ -284,31 +284,10 @@ app.post("/create-checkout-session", express.json({type: 'application/json'}), a
     }
 })
 
-// TODO ??
-// app.get('/faq', (req, res) => {
-// 	res.status(200).set('Content-Type', 'text/html')
-// 	res.render('faq')
-// })
-
 app.get('/suggestions', (req, res) => {
 	res.status(200).set('Content-Type', 'text/html')
 	res.render('suggestions')
 })
-
-// app.get('/success', (req, res) => {
-// 	res.status(200).set('Content-Type', 'text/html')
-// 	res.render('success')
-// })
-
-// app.get('/cancel', (req, res) => {
-// 	res.status(200).set('Content-Type', 'text/html')
-// 	res.render('cancel')
-// })
-
-// app.get('/timeout', (req, res) => {
-// 	res.status(200).set('Content-Type', 'text/html')
-// 	res.render('timeout')
-// })
 
 app.listen(process.env.PORT || 3000, () => {
 	console.log('Listening')
