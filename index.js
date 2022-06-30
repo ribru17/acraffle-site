@@ -25,150 +25,40 @@ app.get('/', (req, res) => {
 })
 
 app.get('/shop', async (req, res) => {
-    const { code } = req.query //discord redirect code
-	if (!code) { //not redirected from discord
-		if (req.cookies.refreshTokenCookie) {
-			try {
-
-				let encCookie = req.cookies.refreshTokenCookie
-				let dec = CryptoJS.AES.decrypt(encCookie, process.env.ENCRYPTION_KEY)
-				let stringLit = dec.toString(CryptoJS.enc.Utf8)
-		
-				oauthResult = await fetch('https://discord.com/api/oauth2/token', {
-					method: "POST",
-					body: new URLSearchParams({
-						client_id: process.env.CLIENT_ID,
-						client_secret: process.env.CLIENT_SECRET,
-						grant_type: 'refresh_token',
-						refresh_token: stringLit
-					})
-				})
-				
-				const oauthData = await oauthResult.json()
-				if (oauthData.error) { //invalid cookie
-					res.redirect("https://discord.com/api/oauth2/authorize?client_id=864733251166797835&redirect_uri=https%3A%2F%2Facraffle.ribru17.repl.co%2Fshop%2F&response_type=code&scope=identify")
-					return
-				}
-				
-				const userResult = await fetch('https://discord.com/api/users/@me', {
-					headers: {
-						authorization: `${oauthData.token_type} ${oauthData.access_token}`,
-					}
-				})
-
-				const jsonResult = await userResult.json()
-				//console.log(oauthData);
-				if (jsonResult.message) { //cache is gone, session timeout
-					console.log('message detected')
-					res.status(200).set('Content-Type', 'text/html')
-					res.render('timeout')
-					return
-				}
-
-				let encryptedRefresh = CryptoJS.AES.encrypt(oauthData.refresh_token, process.env.ENCRYPTION_KEY).toString()
-				res.status(200).set('Content-Type', 'text/html')
-				res.render('shop', { data: {...jsonResult, refreshToken: encryptedRefresh, mainurl: process.env.MAIN_URL} })
-				return
-				
-			} catch (err) {
-				console.error(err)
-				res.status(200).set('Content-Type', 'text/html')
-				res.render('timeout')
-				return
-			}
-		}
-		// res.status(200).set('Content-Type', 'text/html')
-		// res.render('timeout')
-		res.redirect("https://discord.com/api/oauth2/authorize?client_id=864733251166797835&redirect_uri=https%3A%2F%2Facraffle.ribru17.repl.co%2Fshop%2F&response_type=code&scope=identify")
+    const code = req.query.code
+    if (!code && !req.cookies.refreshTokenCookie) {
+        redirectAuth(res)
+        return
+    }
+    if (req.cookies.refreshTokenCookie) {
+        const refreshToken = decrypt(req.cookies.refreshTokenCookie)
+        let oauthData = await authenticate(refreshToken, 'refresh')
+        if (oauthData.error) { // cookie is invalid
+            if (!code) {
+                redirectAuth(res)
+                return
+            } else {
+                oauthData = await authenticate(code, 'code')
+            }
+        }
+        const parsedResult = await fetchUser(oauthData)
+        if (parsedResult.message) { // cache is gone, session timeout
+            redirectAuth(res)
+            return
+        }
+        res.render('connected', { data: { name: parsedResult.username, refreshToken: encrypt(oauthData.refresh_token) } })
+        return
+    }
+    else { // no refresh token but there is a code
+        const oauthData = await authenticate(code, 'code')
+        const parsedResult = await fetchUser(oauthData)
+        if (parsedResult.message) { // cache is gone, session timeout
+            redirectAuth(res)
+            return
+        }
+        res.render('connected', { data: { name: parsedResult.username, refreshToken: encrypt(oauthData.refresh_token) } })
 		return
-	}
-	try {
-
-		let oauthResult
-		let oauthData
-
-		if (req.cookies.refreshTokenCookie) { //refresh token stored in cookie
-
-			let encCookie = req.cookies.refreshTokenCookie
-			let dec = CryptoJS.AES.decrypt(encCookie, process.env.ENCRYPTION_KEY)
-			let stringLit = dec.toString(CryptoJS.enc.Utf8)
-
-			oauthResult = await fetch('https://discord.com/api/oauth2/token', { //validate refresh token
-				method: "POST",
-				body: new URLSearchParams({
-					client_id: process.env.CLIENT_ID,
-					client_secret: process.env.CLIENT_SECRET,
-					grant_type: 'refresh_token',
-					refresh_token: stringLit
-				})
-			})
-
-			oauthData = await oauthResult.json()
-			console.log(oauthData)
-			if (oauthData.error) {
-				oauthResult = await fetch('https://discord.com/api/oauth2/token', { //validate initial token
-					method: 'POST',
-					body: new URLSearchParams({
-						client_id: process.env.CLIENT_ID,
-						client_secret: process.env.CLIENT_SECRET,
-						code,
-						grant_type: 'authorization_code',
-						redirect_uri: process.env.MAIN_URL + '/shop/',
-						scope: 'identify',
-					}),
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-				})
-				oauthData = await oauthResult.json()
-			}
-		} else {
-			oauthResult = await fetch('https://discord.com/api/oauth2/token', { //validate initial token
-				method: 'POST',
-				body: new URLSearchParams({
-					client_id: process.env.CLIENT_ID,
-					client_secret: process.env.CLIENT_SECRET,
-					code,
-					grant_type: 'authorization_code',
-					redirect_uri: process.env.MAIN_URL + '/shop/',
-					scope: 'identify',
-				}),
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-				},
-			})
-			oauthData = await oauthResult.json()
-		}
-
-		// oauthData = await oauthResult.json()
-		console.log(oauthResult)
-		
-		const userResult = await fetch('https://discord.com/api/users/@me', { //getting user info via discord
-			headers: {
-				authorization: `${oauthData.token_type} ${oauthData.access_token}`,
-			}
-		})
-
-		const jsonResult = await userResult.json()
-		
-		if (jsonResult.message) { //cache is gone, session timeout
-			console.log(jsonResult, "message detected")
-			res.status(200).set('Content-Type', 'text/html')
-			res.render('timeout')
-			return
-		}
-
-		let encryptedRefresh = CryptoJS.AES.encrypt(oauthData.refresh_token, process.env.ENCRYPTION_KEY).toString()
-
-		res.status(200).set('Content-Type', 'text/html')
-		res.render('shop', { data: {...jsonResult, refreshToken: encryptedRefresh, mainurl: process.env.MAIN_URL} }) //send user data along with refresh token to the server
-		return
-	} catch (err) {
-		console.error(err)
-		res.status(200).set('Content-Type', 'text/html')
-		res.render('timeout') //purchase failed, redirect to cancel page
-		return
-	}
+    }
 })
 
 app.get('/index', (req, res) => {
@@ -187,7 +77,6 @@ app.get('/cancel', (req, res) => {
 })
 
 async function giveProduct(id, amt) {
-	// console.log(BigInt(id))
 	id = Decimal128.fromString(id)
 	amt = parseInt(amt)
 	client.db("acrafflebot").collection("users").findOne({ id: id }, (err, result) => {
@@ -196,15 +85,12 @@ async function giveProduct(id, amt) {
 			console.log(`User with id: ${id} not found in database.`)
 			return
 		}
-		// console.log(result)
 	})
 	client.db("acrafflebot").collection("users").updateOne({ id: id }, { $inc: { packs: amt }}, (err, result) => { //incement packs value by the integer
 		if (err) {
-			console.log(`Error giving user with id: ${id} their pack(s)`)
-			console.log(err)
+			console.error(`Error giving user with id: ${id} their pack(s): ${err}`)
 			return
 		}
-		// console.log(result);
 	})
 }
 
@@ -292,3 +178,61 @@ app.get('/suggestions', (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
 	console.log('Listening')
 })
+
+async function authenticate(credentials, type) {
+    if (type === 'code') {
+        const refreshedData = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            body: new URLSearchParams({
+                client_id: process.env.CLIENT_ID,
+                client_secret: process.env.CLIENT_SECRET,
+                code: credentials,
+                grant_type: 'authorization_code',
+                redirect_uri: process.env.MAIN_URL + '/shop/',
+                scope: 'identify'
+            }),
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+        })
+        const oauthData = await refreshedData.json()
+        return oauthData
+    } else if (type === 'refresh') {
+        const refreshedData = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            body: new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: credentials,
+                client_id: process.env.CLIENT_ID,
+                client_secret: process.env.CLIENT_SECRET,
+            }),
+        })
+        const oauthData = await refreshedData.json()
+        return oauthData
+    } else {
+        console.error('Invalid type!')
+        return null
+    }
+}
+
+async function fetchUser(oauthData) {
+    const userResult = await fetch('https://discord.com/api/users/@me', {
+        headers: {
+            authorization: `${oauthData.token_type} ${oauthData.access_token}`
+        }
+    })
+    const parsedResult = await userResult.json()
+    return parsedResult
+}
+
+function redirectAuth(res) {
+    res.redirect("https://discord.com/api/oauth2/authorize?client_id=864733251166797835&redirect_uri=https%3A%2F%2Facraffle.ribru17.repl.co%2Fshop%2F&response_type=code&scope=identify")
+}
+
+function encrypt(data) {
+  return CryptoJS.AES.encrypt(data, process.env.ENCRYPTION_KEY).toString();
+}
+
+function decrypt(data) {
+  return CryptoJS.AES.decrypt(data, process.env.ENCRYPTION_KEY).toString(CryptoJS.enc.Utf8);
+}
